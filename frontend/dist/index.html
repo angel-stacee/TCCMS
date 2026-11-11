@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/jpeg" href="/tcc-logo.jpg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TCC Clinic Management System</title>
+    <script>
+      (function() {
+        try {
+          var theme = localStorage.getItem('tcc-theme');
+          if (theme === 'dark') {
+            document.documentElement.classList.add('tcc-dark', 'dark');
+          } else {
+            document.documentElement.classList.remove('tcc-dark', 'dark');
+          }
+        } catch(e) {}
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-dY2BCwsh.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/jsx-runtime-C89YncKY.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-ClB0Gs3k.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
