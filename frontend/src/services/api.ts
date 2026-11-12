@@ -1,39 +1,46 @@
+
 import axios from "axios";
 import { invalidateRecordCache } from "./recordCache";
 
-
+const envUrl = import.meta.env.VITE_API_URL?.trim().replace(/\/+$/, "");
 
 export const getApiOrigin = (): string => {
-    const envUrl = (import.meta as any).env?.VITE_API_URL;
-    if (envUrl && /^https?:\/\//i.test(envUrl)) {
+    if (envUrl) {
         try {
             return new URL(envUrl).origin;
         } catch {
-            // ignore malformed URLs
+            console.error("Invalid VITE_API_URL:", envUrl);
         }
     }
 
-    if (typeof window !== "undefined" && window.location?.hostname) {
+    if (typeof window !== "undefined") {
         const host = window.location.hostname;
-        if (host !== "localhost" && host !== "127.0.0.1") {
-            return `http://${host}:8000`;
+
+        if (host === "localhost" || host === "127.0.0.1") {
+            return "http://127.0.0.1:8000";
         }
+
+        return window.location.origin;
     }
 
     return "http://127.0.0.1:8000";
 };
 
 export const getApiBaseUrl = (): string => {
-    const envUrl = (import.meta as any).env?.VITE_API_URL;
     if (envUrl) {
-        return envUrl.replace(/\/+$/, "");
+        return envUrl;
     }
+
     return `${getApiOrigin()}/api`;
 };
 
-export const resolveImageUrl = (path: string | null | undefined): string | null => {
+export const resolveImageUrl = (
+    path: string | null | undefined
+): string | null => {
     if (!path) return null;
+
     const trimmed = String(path).trim();
+
     if (!trimmed) return null;
 
     if (
@@ -45,9 +52,11 @@ export const resolveImageUrl = (path: string | null | undefined): string | null 
         return trimmed;
     }
 
-    const origin = getApiOrigin();
-    const cleanPath = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
-    return `${origin}${cleanPath}`;
+    const cleanPath = trimmed.startsWith("/")
+        ? trimmed
+        : `/${trimmed}`;
+
+    return `${getApiOrigin()}${cleanPath}`;
 };
 
 const api = axios.create({
@@ -73,24 +82,29 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
     (response) => {
-        if (!['get', 'head', 'options'].includes(response.config.method?.toLowerCase() || 'get')) {
+        const method = response.config.method?.toLowerCase() || "get";
+
+        if (!["get", "head", "options"].includes(method)) {
             invalidateRecordCache();
         }
+
         return response;
     },
     (error) => {
         if (error?.response?.status === 401) {
             invalidateRecordCache();
+
             localStorage.removeItem("token");
             localStorage.removeItem("user");
+
             if (
                 typeof window !== "undefined" &&
-                window.location &&
                 !window.location.pathname.startsWith("/login")
             ) {
                 window.location.href = "/login";
             }
         }
+
         return Promise.reject(error);
     }
 );
